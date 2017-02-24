@@ -36,10 +36,12 @@
 
 // The following values will probably need to be changed.
 $db['default']['username'] = "root";
+//$db['default']['password'] = "ap_ics#009!23";
 $db['default']['password'] = "";
-$db['default']['database'] = "DevEasy";
+$db['default']['database'] = "eml";
 
 // The following values can probably stay the same.
+//$db['default']['hostname'] = "192.168.1.51";
 $db['default']['hostname'] = "localhost";
 $db['default']['dbdriver'] = "mysql";
 $db['default']['dbprefix'] = "";

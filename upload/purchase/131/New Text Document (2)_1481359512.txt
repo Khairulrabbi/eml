@@ -1,0 +1,29 @@
+<div class="form-group">
+                        <label for="sales_code" class="col-lg-6 control-label">Department </label>
+                        <div class="col-lg-8">
+                            <select name="electronics">
+                                <option value="cse">CSE</option>
+                                <option value="eee">EEE</option>
+                                <option value="select_dept" selected>Select Department </option>
+                                <option value="swe">SWE</option>
+                          </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sales_code" class="col-lg-4 control-label">Semester </label>
+                        <div class="col-lg-8">
+                            <select name="semester">
+                                <option value="fi_sem">Final Semester</option>
+                                <option value="sem2">2nd Semester</option>
+                                <option value="select_sem" selected>Select Semester </option>
+                                
+                          </select>
+                        </div>
+                    </div>  
+
+
+<br>
+                   <div class="form-group">
+                        <label for="sales_code" class="col-lg-7 control-label"></label>
+                        <input class="col-lg-4 " id="inputsm" type="text"placeholder="search here">
+                   </div>

@@ -27,7 +27,7 @@ class Login_cont extends Custom_Controller {
         $user = $this->input->post('user_name');
         $pass  = md5($this->input->post('password'));
         $redirect_url = $this->input->post('re_url');
-
+        //debug($redirect_url,1);
         if( $user && $pass && $this->login_model->validate_user($user,$pass)) {
             $user_id = $this->login_model->user_info($user,$pass);
             if(!empty($redirect_url)){

@@ -18,7 +18,7 @@ class Custom_Controller extends CI_Controller {
             
   function __construct() {
         parent::__construct();
-        $this->output->enable_profiler(TRUE);
+        //$this->output->enable_profiler(TRUE);
         date_default_timezone_set("Asia/Dacca");
         //define('ENVIRONMENT', 'development');
         $this->load->helper('url','html','form');
@@ -60,20 +60,88 @@ class Custom_Controller extends CI_Controller {
             //menu_data must contain the structure of the menu...
             //you can populate it from database or helper
             $this->load->view($view,$data);
-            $this->load->view('template/footer');
+            $this->load->view('template/footer',$data);
         }else{
             $message_403 = "You don't have access to the url you where trying to reach.";
             show_error($message_403 , 403 ); 
         }
     }else{
         $url = current_url();
-        redirect('/login_cont?url='.$url);
+        redirect('/login_cont?url='.urlencode($url));
     }
   }
+  
+  /*======================================== Journal Entry (Accounts & Finance Module)========================== */
+  function serial_generator($pattern_for = NULL, $customer_id = NULL){
+        $voucher = '';
+        $frmt = $this->db->query("SELECT
+            auto_number_format.auto_number_format_id,
+            auto_number_format.format_name,
+            auto_number_format.format_pattern,
+            auto_number_format.pattern_for,
+            auto_number_format.reset_month,
+            auto_number_format.reset_year,
+            auto_code_serial.current_serial
+            FROM
+            auto_number_format
+            INNER JOIN auto_code_serial ON auto_code_serial.format_id = auto_number_format.auto_number_format_id
+            WHERE
+            auto_number_format.pattern_for = '$pattern_for'")->result_array();
+        foreach ($frmt as $format) {
+            $format_id = $format['auto_number_format_id'];
+            $current_serial = $format['current_serial'];
+            $next_serial = $current_serial + 1;
+            $ee = explode('%',$format['format_pattern']);
+            //print_r($ee);
+            foreach ($ee as $key => $fsplit) {
+                if($fsplit == 'y'){
+                    $voucher .= date('Y');
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'm'){
+                    $voucher .= date('m');
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'd'){
+                    $voucher .= date('d');
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'h'){
+                    $voucher .= date('h');
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'i'){
+                    $voucher .= date('i');
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 's'){
+                    $voucher .= date('s');
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'user_id' || $fsplit == 'created_by'){
+                    $voucher .= $this->user_id;
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'cust_id'){
+                    $voucher .= $customer_id ;
+                    unset($ee[$key]);
+                }
+                elseif($fsplit == 'sl'){
+                    $voucher .= str_pad($next_serial, 4, '0', STR_PAD_LEFT);
+                    unset($ee[$key]);
+                }
+                else{
+                    $voucher .= $fsplit;
+                }
+            }
+            return $voucher;
+        }
+    }
   
   /*==========================================  Get Menu List   ===================================================*/
     public function get_menu(){
         $get_menu_info = $this->main_model->get_menu_model(); // call model for getting menu and sub menu
+        //debug($get_menu_info,1);
         $menus = array();
         $all_menu = array();
         foreach ($get_menu_info as $get_menu_info1){
@@ -115,6 +183,7 @@ class Custom_Controller extends CI_Controller {
 
             $menus[] = $menu; 
         }
+        
         $get_all_menu_info = $this->main_model->get_menu_model('All');
         foreach ($get_all_menu_info as $value) {
             $get_all_menu = '<option value="'.$value['menu_id'].'">'.$value['menu_name'].'</option>'.$this->create_menu($value['menu_id']);

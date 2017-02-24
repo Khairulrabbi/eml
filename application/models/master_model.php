@@ -26,11 +26,11 @@ class Master_model extends CI_Model {
         if(empty($master_entry_table_name)){
             return;
         }
-        $query = $this->db->query("SELECT field_name,`sql`,comma_separated_value,hide_from_grid,self_filtering,hide_from_input,input_type,required_field,label_name,placeholder FROM master_entry WHERE master_entry_table_name = '$master_entry_table_name' AND master_entry_title='$mask_title'");
+        $query = $this->db->query("SELECT field_name,`sql`,comma_separated_value,hide_from_grid,self_filtering,hide_from_input,input_type,required_field,label_name,placeholder,search FROM master_entry WHERE master_entry_table_name = '$master_entry_table_name' AND master_entry_title='$mask_title'");
         return $query->result_array();
     }
     
-    function table_content($fields, $lab, $place,$sql,$hide_from_grid,$self_filtering,$hide_from_input,$comma_separated_value,$input_type,$required_type,$master_entry_table_name,$request_for,$master_entry_title){
+    function table_content($fields, $lab, $place,$sql,$hide_from_grid,$self_filtering,$hide_from_input,$comma_separated_value,$input_type,$required_type,$master_entry_table_name,$request_for,$master_entry_title,$search){
         //print_r($sql);
         if($request_for != 'show'){
             foreach($fields as $column){  
@@ -57,6 +57,7 @@ class Master_model extends CI_Model {
                 $key = $val2['Key'];
                 $default = $val2['Default'];
                 $extra = $val2['Extra'];
+                $include_search = (isset($search[$val2['Field']]) && $search[$val2['Field']]!='')?1:0;
                 $validation = isset($required_type[$val2['Field']])?$required_type[$val2['Field']]:'';
                 $this->db->query("INSERT INTO master_entry "
                         . "SET "
@@ -72,10 +73,12 @@ class Master_model extends CI_Model {
                         . "hide_from_input='$hide_in_input', "
                         . "label_name='$label', "
                         . "placeholder='$placeholder', "
+                        . "search='$include_search', "
                         . "created=NOW(),"
                         . "master_entry_title='$master_entry_title'");
 
                 }
+              
             }
         }
         $q = $this->db->query("SELECT * FROM master_entry WHERE master_entry_table_name = '$master_entry_table_name' AND master_entry_title='$master_entry_title' ORDER BY sorting");
@@ -200,7 +203,11 @@ class Master_model extends CI_Model {
         return $parent_id;
     }
     
-    function level_for_menu($menu_id){
+//    function get_user_info_by_userid($id){
+//        $query = $this->db->query("");
+//        
+//    }
+            function level_for_menu($menu_id){
         $lebel_list = $this->db->select('GROUP_CONCAT(privilege_menu.user_level_id) AS level_id')
                   ->get_where('privilege_menu', array('menu_id' => $menu_id))
                   ->row()
@@ -336,6 +343,17 @@ class Master_model extends CI_Model {
         return $query->result_array();
     }
     
+    function get_user_history($user_id){
+            $this->db->select("rh.reliever_to,rh.reliever_start_datetime,rh.reliever_end_datetime,rh.created,rh.status",false);
+            $this->db->select("u.username");
+            $this->db->from("reliever_history rh");
+            $this->db->join("user u","u.user_id=rh.user_id","left");
+            $this->db->where("u.user_id ",$user_id);
+            $this->db->order_by("rh.user_id","DESC");
+            $result= $this->db->get();
+            return $result->result_array();
+    }
+            
     function set_reliever_model($post){
         extract($post);
         $history_insert = array('user_id'=>  $this->user_id, 
@@ -438,10 +456,11 @@ class Master_model extends CI_Model {
         $sql = "CREATE TABLE `$table_name` (
         `".$table_name."_id`  int(10) NOT NULL AUTO_INCREMENT ,
         `".$table_name."_name`  varchar(250) NOT NULL ,
+        `description`  text NOT NULL ,
         `created_by`  int(10) NULL ,
-        `created`  datetime NULL ,
+        `created`  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ,
         `updated_by`  int(10) NULL ,
-        `updated`  timestamp NULL ON UPDATE CURRENT_TIMESTAMP ,
+        `updated`  TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP ,
         `status`  enum('Active','Inactive') NULL DEFAULT 'Active' ,
         PRIMARY KEY (`".$table_name."_id`)
         )";

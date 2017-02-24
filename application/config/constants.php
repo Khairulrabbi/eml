@@ -39,3 +39,19 @@ define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
 
 /* End of file constants.php */
 /* Location: ./application/config/constants.php */
+
+
+require_once( BASEPATH .'database/DB'. EXT );
+$db =& DB();
+$query = $db->get( 'label' );
+foreach( $query->result() as $row )
+{ 
+    if($row->custom_name != NULL)
+    {
+        define($row->label_slug, $row->custom_name);
+    }
+    else
+    {
+        define($row->label_slug, $row->label_name);
+    }
+}

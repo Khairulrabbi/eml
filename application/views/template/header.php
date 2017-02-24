@@ -19,16 +19,23 @@
     <link href="<?=base_url()?>css/font-awesome-4.2.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href="<?=base_url()?>css/datepicker.css" rel="stylesheet">
     <link href="<?=base_url()?>css/bootstrap-datetimepicker.min.css" rel="stylesheet">
-    <link href="<?=base_url()?>css/jquery-ui.min.css" rel="stylesheet">
+    <link href="<?=base_url()?>css/jquery-ui.css" rel="stylesheet">
     <link href="<?=base_url()?>css/select2.css" rel="stylesheet">
     <link href="<?=base_url()?>css/apsis_style.css" rel="stylesheet">
     <link href="<?=base_url()?>css/plugins/dataTables.bootstrap.css" rel="stylesheet">
     <link href="<?=base_url()?>css/plugins/dataTables.tableTools.css" rel="stylesheet">
+    <link href="<?=base_url()?>css/daterange/daterangepicker.css" rel="stylesheet" type="text/css"  />
+
+    
     <!------------------------------------------>
     <!------------------------------------------ jQuery Version 1.11.0 ----------------------------------->
     <script src="<?=base_url()?>js/jquery-1.11.0.js"></script>
     <script src="<?=base_url()?>js/jquery-ui.min.js"></script>
+    <script src="<?=base_url()?>js/bootstrap-typeahead.js"></script>
     <!------------------------------------------>
+	
+	<script src="<?=base_url()?>js/bootstrap-checkbox.js" type="text/javascript"></script>
+	
     <!-------------------------------------  Angular JS Libraries ---------------------------------------->
     <script src="<?=base_url()?>js/angular/angular.min.js" type="text/javascript"></script>
     <script src="<?=base_url()?>js/angular/app.js" type="text/javascript"></script>
@@ -40,9 +47,26 @@
     <script src="<?=base_url()?>js/bootstrap.file-input.js"></script>
     <!------------------------------------------>
     
+    <!--------------------------- daterange picker ------------------------------->
+    <script src="<?=base_url()?>js/daterange/moment.min.js" type="text/javascript"></script>
+    <script src="<?=base_url()?>js/daterange/daterangepicker.js" type="text/javascript"></script>
+
+    
+	<!--------------------------- HighCharts ------------------------------->
+    <script src="<?=base_url()?>js/Highcharts/highcharts.js"></script> 
+    <script src="<?=base_url()?>js/Highcharts/modules/data.js"></script>
+    <script src="<?=base_url()?>js/Highcharts/modules/drilldown.js"></script>
+    <?php echo put_headers();?>
+    <!------------------------------------------>
+    
+   
+    
 <!--    <script src="<?//=base_url()?>js/jquery.imgareaselect.pack.js"></script>-->
 <!--    <script src="<?//=base_url()?>js/script.js"></script>-->
 <!--    <script src="<?//=base_url()?>js/bootstrap-datepicker.js"></script>-->
+    
+<!--------------------------- baseurl for jquery ------------------------------->
+<script> var base_url = "<?php echo base_url(); ?>"; </script>
 
     <style>
         .datepicker{z-index: 99999 !important;}
@@ -51,11 +75,14 @@
         div.form-control{border: none;padding: 0}
         div.select2-container{display: block !important; height: auto !important;}
     </style>
+    
 </head>
 
 <body>
+   
 <!------------------------------------------------- Right Top ------------------------------------------------->
     <nav class="navbar navbar-default navbar-fixed-top nav-blue" role="navigation" style="margin-bottom: 0">
+        
 		<div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
@@ -66,8 +93,8 @@
 				<span class="icon-bar"></span>
 			  </button>
 			  <a class="navbar-brand" href="<?=base_url()?>" style="display: inline-table;padding: 5px 0 0 5px;">
-                              <img class="img-responsive" src="<?=base_url()?>images/logo/logo.png" alt=""/>
-                          </a>
+                    <img class="img-responsive" style="width:270px;" src="<?=base_url()?>images/logo/emllogo.png" alt=""/>		
+                  </a>
 			</div>
 
 			<!-- Collect the nav links, forms, and other content for toggling -->
@@ -77,6 +104,14 @@
                 <div id ="count_notification" style="position:absolute;left: 20px;background: #c8c8c8; border-radius: 20px;width: 27px; height: 16px; color: #f00; text-align: center;top: 9px; z-index: -1;">
                      <?php echo ($count_new_notification>99?$count_new_notification.'+':$count_new_notification); ?>
                 </div>
+                 
+                <li>
+                    <a href="<?php echo base_url().'common_controller/product_transaction_list'; ?>">
+<!--                        <img width="16" src="<?php //echo base_url().'images/cart.png'; ?>">-->
+                        <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                        <span class="cart_quantity"><?php echo cart_quantity(); ?></span>
+                    </a>
+                </li>
                 <li class="dropdown">
                     <a href="<?=base_url()?>master/notification">
                         <i class="glyphicon glyphicon-bell"></i>
@@ -85,6 +120,7 @@
                 </li>
                 
                 <!-------- Module -------->
+                
                 <li>
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="<?php echo $module_name->module_icon ?>"></i> 
@@ -106,20 +142,31 @@
                         <li><a href="<?=base_url()?>login_cont/logout/"><i class="glyphicon glyphicon-off"></i> Logout</a></li>
                     </ul>
                 </li>
+                <b>
+                    <p style="text-align: right; margin-right: 10px;">
+                        <?php 
+                            echo $this->session->userdata('FIRSTNAME')." > ".$this->session->userdata('LOCATION_NAME'); 
+                        ?>
+                    </p>
+                </b>
             <!--------------------------------------------->
             </ul>
+            
+            
 <!-------------------------------------MENU BAR-------------------------------------------------->
-        <div class="row" style="border-top: 1px solid #00a178;border-bottom: 1px solid #00a178;"></div>
-		<ul class="nav navbar-nav">
+        <div class="row" style="background-color:#fff; "></div>
+		<div class="row" style="background-color:#ff2666;">
+		<ul class="nav navbar-nav nav-menu">
 			<?php if(isset($menu_list)){ foreach ($menu_list as $menu_list1){ echo $menu_list1; }} ?>
-		</ul>
+		</ul></div>
+        
 <!----------------------------------------------------------------------------------------------->
 		</div><!-- /.navbar-collapse -->
 	</div><!-- /.container-fluid -->
+       
     </nav>
-    
-    <div class="container" style="margin-top:125px;">
-
+   <!-- <div class="container" style="margin-top:150px;">-->
+<div class="" style="margin:100px 10px 10px 10px; " padding:10px;>
 <script>
     $(function(){
 	$(".dropdown-menu > li > a.trigger").on("click",function(e){

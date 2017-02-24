@@ -43,4 +43,20 @@
             $('#' + settings.target_id).bdt();
         }
     }
+    
+
+    
+    
 }(jQuery));
+$(function(){
+    $(document).on("input", ".unit_price_usd", function (e) {
+        e.preventDefault();
+        var usd = $(this).val();
+        var exchange_rate = $('.exchange_rate').val();
+        var totalBdt = usd*exchange_rate;
+        $(this).parent().parent().find(".unit_price_bdt").val(totalBdt);
+    });
+});
+
+
+

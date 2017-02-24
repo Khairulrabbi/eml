@@ -56,9 +56,9 @@
     height:30px
 }
 .tree li.parent_li>span:hover, .tree li.parent_li>span:hover+ul li span {
-    background:#eee;
+    background:#17BFE6;
     border:1px solid #94a0b4;
-    color:#000
+    color:white
 }
 /* End of tree style */
 
@@ -134,3 +134,92 @@ select:focus:invalid:focus {
     cursor: inherit;
     display: block;
 }
+
+.nav-menu li a{
+    color:white !important;
+}
+.dropdown li a{
+	background-color:#0054A6;
+    color:white !important;
+}
+/*  Added by Riad at 20.04.2016 */
+/* Menu Item Selected */
+.navbar-default .navbar-nav > .open > a,.dropdown-menu > li > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+    color: #fff;
+    background-color: #FF2666;
+}
+/* Menu Item Hover */ 
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+    color: #262626 !important;
+    text-decoration: none;
+    background-color: #fff;
+}
+nav li a{
+	/*color: white!important;*/
+	padding:4px !important;
+}
+
+.dropdown-toggle >li >a{
+   color:blue !important;
+}
+.cart_quantity {
+  color: #f00;
+  font-size: 9px;
+  /*left: -9px;*/
+  position: relative;
+  top: -6px;
+  font-weight: bold;
+}
+.form-group {
+    margin-bottom: 5px;
+}
+
+.form-control {
+    height: 28px;
+    padding: 3px;
+}
+
+.panel-heading {
+    padding: 5px;
+}
+
+.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
+    padding: 3px;
+}
+
+.form-horizontal .control-label {
+    text-align: left;
+}
+
+.btn {
+    padding: 2px 5px;
+}
+
+.panel-heading{
+	font-weight: 600;
+    /*text-shadow: 2px 2px 0px #fff;*/
+}
+
+.footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color:#cccccc;
+  text-align: center;
+}
+
+body {
+    font-size: 12px;
+    font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+}
+label {
+    display: inline-block;
+    max-width: 100%;
+     margin-bottom: 0px; 
+    font-weight: bold;
+}
+.cost_component_padding0 {
+  padding: 0 !important;
+}
+

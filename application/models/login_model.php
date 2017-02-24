@@ -19,13 +19,16 @@ class Login_model extends CI_Model {
         }
     }
     function user_info($user,$pass) {
-        $query = $this->db->query("SELECT * FROM user WHERE username='$user' AND password='$pass'");
+        $query = $this->db->query("SELECT u.*, l.location_name FROM user u LEFT JOIN location l ON l.location_id=u.location_id WHERE u.username='$user' AND u.password='$pass'");
         foreach ($query->result_array() as $row)
             {
                 $data['USER_ID']=$row['user_id'];
                 $data['FIRSTNAME']=$row['first_name'];
                 $data['LASTNAME']=$row['last_name'];
                 $data['default_module_id'] = $row['default_module_id'];
+                $data['LOCATION_ID'] = $row['location_id'];
+                $data['LOCATION_NAME'] = $row['location_name'];
+                $data['PRIVILEGE_NATION_ACCESS'] = $row['privilege_nation_access'];
                 // If user is admin then add all level id into SESSION
                 if( $data['USER_ID'] == 1 ){
                     $query = $this->db->query("SELECT user_level_id FROM user_level");
@@ -130,5 +133,31 @@ class Login_model extends CI_Model {
         $query = $this->db->get();
         return $query->row();
     }
+    
+//    function set_label_cookie()
+//    {
+//        $this->db->select("*");
+//        $this->db->from("label");
+//        $this->db->where("status","Active");
+//        $rows = $this->db->get(); 
+//        
+//        foreach ($rows->result() as $row)
+//        {
+//            delete_cookie($row->label_slug, ''); 
+//        }
+//        
+//        
+//        foreach($rows->result() as $row)
+//        {
+//            if($row->custom_name != NULL)
+//            {
+//                $this->input->set_cookie($row->label_slug, $row->custom_name, 0);
+//            }
+//            else
+//            {
+//                $this->input->set_cookie($row->label_slug, $row->label_name, 0);
+//            }
+//        }
+//    }
         
 }

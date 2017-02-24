@@ -64,7 +64,7 @@ $autoload['libraries'] = array('database','upload','email');
 |	$autoload['helper'] = array('url', 'file');
 */
 
-$autoload['helper'] = array('form');
+$autoload['helper'] = array('form','common','delegation_manager');
 
 
 /*

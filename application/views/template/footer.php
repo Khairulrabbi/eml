@@ -1,3 +1,18 @@
+<!--<div class="col-lg-12 footer">
+<div class="col-lg-3">
+<a href="http://www.dell.com/">
+ <img src="<?php echo base_url().'images/logo/dell.png'?>" alt='Dell' height=40"></a>
+</div>
+<div class="col-lg-6">
+<i class="fa fa-copyright"></i> BTRAC Technologies
+</div>
+
+<div class="col-lg-3">
+<a href="http://www.banglatrac.com/">
+ <img src="<?php echo base_url().'images/logo/bangla_trac_logo.png'?>" alt='Dell' height=20"></a>
+</div>
+
+</div>-->
 </div>
 <!-- /#page-wrapper -->
 <!-- Metis Menu Plugin JavaScript -->
@@ -10,17 +25,57 @@
     <script src="<?=base_url()?>js/custom_dataTable.js"></script>
     <script src="<?=base_url()?>js/select2.min.js"></script>
     <script src="<?=base_url()?>js/apsis_plugin.js"></script>
+    <script src="<?=base_url()?>js/jquery-ui.js"></script>
+    <script src="<?=base_url()?>js/numbertoword.js"></script>
 
-    <!-- Custom Theme JavaScript -->
-    <!-- Page-Level Demo Scripts - Tables - Use for reference -->
+    
+    <!--Only datepicker show in firefox-->
+    <!-- cdn for modernizr, if you haven't included it already -->
+    <script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+    <!-- polyfiller file to detect and load polyfills -->
+    <script src="http://cdn.jsdelivr.net/webshim/1.12.4/polyfiller.js"></script>
     <script>
+      webshims.setOptions('waitReady', false);
+      webshims.setOptions('forms-ext', {types: 'date'});
+      webshims.polyfill('forms forms-ext');
+    </script>
+    <script>
+//    end datepicker show plugin
+    
        
 $(document).ready(function(){
-    $("h1").colorful();
-    $('p.money').bdt();
-    //$(".amount").calculate();
-    $("select[class!='max']").select2();
-    $(".max").select2({maximumSelectionSize: 5});
+    $('select').select2();
+	/*$('input[type=date]').addClass('datepicker');*/
+    /*webshims.setOptions('forms-ext', {types: 'date',"widgets": {"startView": 0}});*/
+//	webshim.setOptions("forms-ext", {
+//	"widgets": {
+//		"startView": 2,
+//		"minView": 0,
+//		"inlinePicker": false,
+//		"size": 1,
+//		"splitInput": false,
+//		"yearSelect": false,
+//		"monthSelect": false,
+//		"daySelect": false,
+//		"noChangeDismiss": false,
+//		"openOnFocus": false,
+//		"buttonOnly": true,
+//		"classes": "",
+//		"popover": {
+//			//popover options
+//		},
+//		"calculateWidth": true,
+//		"animate": true,
+//		"toFixed": 0,
+//		"onlyFixFloat": false
+//	}
+//});
+//	webshims.polyfill('forms forms-ext');
+//    $("h1").colorful();
+//    $('p.money').bdt();
+//    //$(".amount").calculate();
+//    $("select[class!='max']").select2();
+//    $(".max").select2({maximumSelectionSize: 5});
     // 
     //----------------- Datetime picker --------------------- //
     $('.datetimepicker').datetimepicker({
@@ -63,7 +118,11 @@ $(document).ready(function(){
         maxView: 1,
         forceParse: 0
     });
+    
+    
+    
     // --------------- Datepicker related code ends ----------------- //
+    
     $("#selectAll").click(function () {
     if(this.checked){
         $('#dataTables-checkbox tbody tr').each(function(){
@@ -149,6 +208,11 @@ function stopPropagation(evt) {
 	}
 	return x1 + x2;
 }
+function capitalizeEachWord(str) {
+    return str.replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
 function apsis_money(nStr)
 {
 	nStr += '';
@@ -162,5 +226,49 @@ function apsis_money(nStr)
 	return x1 + x2 + '.00';
 }
 </script>
+<script>
+   
+    function get_product_list() {
+        var product_category_id = $('.product_category_id option:selected').val();
+        ;
+        //alert(category_id);
+        var product_brand_id = $('.product_brand_id option:selected').val();
+        var product_subcategory_id = $('.product_subcategory_id option:selected').val();
+        $.ajax({
+            url: '<?php echo base_url();?>'+'ajax_controller/get_product_list_combo',
+            type: 'POST',
+            data: {product_category_id: product_category_id, product_brand_id: product_brand_id, sub_category_id: product_subcategory_id},
+            success: function (data) {
+                //alert(data);
+                $('.product_list').html(data);
+                $('select').select2();
+            }
+        });
+    }
+
+//this function commonly use add product modal open(purchase order, requisition, sales order)
+$('#add_product').on("click",function(){
+    var order_id = $(".order_id").val();
+    var module = $(this).attr("module");
+    if(order_id){
+        $('.appendSearchPanel').append('<input type="hidden" name="order_id" value="'+order_id+'">');//this line only add item search panel
+        $('.appendSearchPanel').append('<input type="hidden" name="module" value="'+module+'">');//this line only add item search panel
+        $(this).attr("data-target", "#add_product_m");
+    }else{
+        var htm ='<div class="invalid alert alert-danger">';
+        htm += '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>';
+        htm += 'Please Save Order First.';
+        htm +='</div>';
+        $('.product_block').html(htm);
+    }
+});
+    
+</script>
+<?php
+    $this->load->view("template/all_title_name_page");
+    //$data['breadcrumb'] = $breadcrumb;
+    $this->load->view("template/breadcrumb");
+?>
+
 </body>
 </html>

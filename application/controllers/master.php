@@ -15,8 +15,9 @@ class Master extends Custom_Controller {
         if($this->is_post()){
             $data['selected_title'] = $this->input->post('master_entry_title', TRUE);
             $data['selected_table'] = $this->master_model->get_original_table_name($data['selected_title']);
-        
+            
             $data['record'] = $this->master_model->get_table($data['selected_table']);
+            //print_r($data);
             $master_entry_table_name = $data['selected_table'];
             $record_previous = $this->master_model->get_previous_table($master_entry_table_name, $data['selected_title']);
             $check_data = array();
@@ -50,6 +51,10 @@ class Master extends Custom_Controller {
 
             // Get the list of master entry table name
             $data['master_table'] = $this->master_model->get_master_table();
+            $search = $this->db->query("SELECT include_search_panel FROM master_entry_table WHERE master_entry_title='".$data['selected_title']."'")->row();
+            if($search->include_search_panel == 1){
+                $data['search'] = 'search';
+            }
         }
         // Get duplicate master entry title
         $data['mask_table_name'] = $this->master_model->get_mask_table();
@@ -70,15 +75,15 @@ class Master extends Custom_Controller {
         $comma_separated_value = $this->input->post('comma_separated_value');
         $input_type = $this->input->post('input_type');
         $required_type = $this->input->post('required');
+        $search = $this->input->post('search');
         $request_for = $this->input->post('show')?'show':'create';
-        //print_r($sql);
-        //exit;
+
         /*
          * table_content() function perform the insertion the details of requested table for creating master entry
          * And return all value into array from master_entry taable to create view of the requested table
          */
         
-        $data_master_form = $this->master_model->table_content($fields,$lab,$place,$sql,$hide_from_grid,$self_filtering,$hide_from_input,$comma_separated_value,$input_type,$required_type,$master_entry_table_name,$request_for,$master_entry_title);
+        $data_master_form = $this->master_model->table_content($fields,$lab,$place,$sql,$hide_from_grid,$self_filtering,$hide_from_input,$comma_separated_value,$input_type,$required_type,$master_entry_table_name,$request_for,$master_entry_title,$search);
         
         //Get the data for additional table to join
         if(!null==($this->input->post('count_hidden'))){
@@ -97,6 +102,21 @@ class Master extends Custom_Controller {
     }
     
     function show_master($mask_name=NULL, $msg = NULL){
+        /*
+         * This section is added by Md Riad Hossain at 02/05/2016
+         * This section is the action point of search panel
+         * This part is actually build a sql conditional part
+         * We also need to send the post inorder to keep the selected value in the search form
+         */
+        $p = $this->input->post();
+        $builder = '';
+        if(isset($p) && !empty($p)){
+            foreach ($p as $key => $value) {
+                if($value!='')$builder .=" AND ".$key."= '".$value."'";
+            }
+        }
+        /* End of the newly added part */
+        
         // If requested for any table that is not exist in the database server.
         if(!$mask_name){
             show_404 ();
@@ -105,9 +125,10 @@ class Master extends Custom_Controller {
             $data_master_form = $query->result_array();
             //echo '<pre>';
             //print_r($data_master_form);
+            //exit;
             //echo '</pre>';
             $menu_id = $this->input->get('m_id');
-            $this->get_html($data_master_form, $mask_name, NULL,$menu_id, $msg);
+            $this->get_html($data_master_form, $mask_name, NULL,$menu_id, $msg, $builder,$p);
         }
     }
     
@@ -147,7 +168,7 @@ class Master extends Custom_Controller {
         }  
     }
     
-    function get_html($data_master_form, $master_entry_table_title, $id = NULL,$menu_id=null, $msg = NULL){
+    function get_html($data_master_form, $master_entry_table_title, $id = NULL,$menu_id=null, $msg = NULL, $builder = NULL, $post_value = NULL){
         //print_r($data_master_form);
         // Now get the original table name
         $master_entry_table_name = $this->master_model->get_original_table_name($master_entry_table_title);
@@ -160,10 +181,25 @@ class Master extends Custom_Controller {
             $unique_exception = ' entry_id="'.$id.'" ';
             //print_r($get_data_from_table);
         }
+        // Now read the query and where filter for requested table inorder to generate grid data
+        $get_sql_and_where_filter = $this->db->query("SELECT table_sql,where_clause_filter,export_pdf,export_excel,export_csv,enable_printing,import_excel,disable_grid_view,disable_form_view,form_column,disable_action,disable_edit_icon,disable_delete_icon FROM master_entry_table WHERE master_entry_title='$master_entry_table_title'")->row();
+        $form = array();
+        $table_field = array();
+        $label_list = array();
+        $search_param = array();
+        $search_html = '';
         foreach ($data_master_form as $rec2){
             //echo '<pre>';
             //print_r($rec2);
             //echo '</pre>';
+            //echo $rec2['search'];
+            /* Now check for search panel */
+            
+            if($get_sql_and_where_filter->disable_grid_view != 1 && $rec2['search'] == 1){
+                //$search_param[$rec2['field_name']][] = $rec2['search'];
+                //$search_html .= $rec2['field_name'].'<input type="" />';
+            }
+            
             if($rec2['hide_from_input'] !=1 ){
                 $input='';
                 $filter_class = $rec2['self_filtering'] == 1 ? ' class="search"':'';
@@ -181,8 +217,10 @@ class Master extends Custom_Controller {
                 //$selected_value = '';
                 $required_str = ($validation == 'required')?'<span style="color:#f00">*</span>':'';
                 $label_name = "<div class='form-group'><label>$label</label> $required_str";
+                $slabel_name = "<div class='form-group'><label>$label</label>";
                 $is_join = $rec2['join_with'];
                 // Here it will check the join field and submitted id to retrive value from related joined table
+                //echo $type.' -- ';
                 if( $is_join != NULL && $id !=NULL ){
                     $selected_value = array();
                     $sql = "SELECT $field_name FROM $is_join WHERE ".$rec2['join_with_fk_name']."=$id";
@@ -194,6 +232,7 @@ class Master extends Custom_Controller {
                     //print_r($data);
                 }else{
                      $selected_value = isset($get_data_from_table)?$get_data_from_table[0][$field_name]:'';
+                     $selected_value_search = ($post_value != NULL && isset($post_value[$field_name]))?$post_value[$field_name]:'';
                 }
                 //echo $field_name.'-'.$value.'<br>';
                 switch ($type){
@@ -212,9 +251,11 @@ class Master extends Custom_Controller {
                             }
                         }
                         $input .= form_dropdown($field_name.($is_join==NULL?"":"[]"), $options,$selected_value,'class="form-control"'.$validation.($is_join==NULL?"":" multiple")).'</div>';
+                        $search_html .= ($rec2['search'] == 1?$slabel_name.form_dropdown($field_name.($is_join==NULL?"":"[]"), $options,$selected_value_search,'class="form-control"'.($is_join==NULL?"":" multiple")).'</div>':'');
                         break;
                     case 'var':
                         $input = "$label_name<input $validation $unique $unique_exception type='text' name='$field_name' placeholder='$placeholder' value='$selected_value' class='form-control'/>$draw_message</div>";
+                        $search_html .= ($rec2['search'] == 1?"$slabel_name<input type='text' name='$field_name' placeholder='$placeholder' value='$selected_value_search' class='form-control'/></div>":'');
                         break;
                     case 'int':
                         if($field_key == 'MUL'){
@@ -228,6 +269,14 @@ class Master extends Custom_Controller {
                                 $input .= "<option value='$foreing_info1[$foreign_id]'>$foreing_info1[$foreign_name]</option>";
                             }
                             $input .= "</select></div>";
+                            if($rec2['search'] == 1){
+                                $search_html .= "$slabel_name<select class='form-control' name='$field_name'>";
+                                $search_html .= "<option value=''>Select</option>";
+                                foreach ($foreing_info as $foreing_info1){
+                                    $search_html .= "<option value='$foreing_info1[$foreign_id]'>$foreing_info1[$foreign_name]</option>";
+                                }
+                                $search_html .= "</select></div>";
+                            }
                         }
                         break;
                     case 'dat':
@@ -235,12 +284,14 @@ class Master extends Custom_Controller {
                         break;
                     case 'tex':        
                         $input = "$label_name<textarea $validation name='$field_name' class='form-control'>$selected_value</textarea></div>";
+                        $search_html .= ($rec2['search'] == 1?"$slabel_name<input type='text' name='$field_name' placeholder='$placeholder' value='$selected_value_search' class='form-control'/></div>":'');
                         break;
                     case 'hidden':        
                         $input = "<div class='form-group'><input type='$type' name='$field_name' placeholder='$placeholder' value='".$this->session->userdata($field_name)."' class='form-control'/></div>";
                         break;
                     case 'textarea':        
                         $input = "$label_name<textarea $validation name='$field_name' class='form-control'>$selected_value</textarea></div>";
+                        $search_html .= ($rec2['search'] == 1?"$slabel_name<textarea $validation name='$field_name' class='form-control'>$selected_value_search</textarea></div>":'');
                         break;
                     case 'checkbox':
                         $input = " $label_name <input $validation type='hidden' name='$field_name' placeholder='$placeholder' value='0' />"
@@ -248,25 +299,29 @@ class Master extends Custom_Controller {
                         break;
                     default :
                         $input = "$label_name<input step='any' $unique $unique_exception  $validation type='$type' name='$field_name' placeholder='$placeholder' value='$selected_value' class='form-control'/>$draw_message</div>";
+                        $search_html .= ($rec2['search'] == 1?"$slabel_name<input type='text' name='$field_name' placeholder='$placeholder' value='$selected_value_search' class='form-control'/>":'');
                         break;
                 }
 
                 if( $is_join != NULL){
                     $hdn_arr[$is_join] = $field_name;
                 }
-
-                $form[] = $input;
+                // When form view is not disable need to draw the form otherwise not
+                if($get_sql_and_where_filter->disable_form_view == 1) $input = '';
+                else $form[] = $input;
             }
             //When hide_from_grid is true then add lebel and field into array for generating view of master entry 
             //Otherwise the field will not show in the table view of master entry
             if($rec2['hide_from_grid'] != 1){
-            $label_list[] = "<th $filter_class>".$rec2['label_name']."</th>";
-            $table_field[] = $rec2['field_name'];
+                if($get_sql_and_where_filter->disable_grid_view != 1){
+                    $label_list[] = "<th $filter_class>".$rec2['label_name']."</th>";
+                    $table_field[] = $rec2['field_name'];
+                }
             }   
         }
         
-        // Now read the query and where filter for requested table inorder to generate grid data
-        $get_sql_and_where_filter = $this->db->query("SELECT table_sql,where_clause_filter,export_pdf,export_excel,export_csv,enable_printing,import_excel FROM master_entry_table WHERE master_entry_title='$master_entry_table_title'")->row();
+        //echo $search_html;
+        //exit;
         
         $get_sql = $get_sql_and_where_filter->table_sql;
         $filter = $get_sql_and_where_filter->where_clause_filter;
@@ -275,6 +330,10 @@ class Master extends Custom_Controller {
         $export_csv = $get_sql_and_where_filter->export_csv;
         $enable_printing = $get_sql_and_where_filter->enable_printing;
         $import_excel = $get_sql_and_where_filter->export_excel;
+        $form_column = $get_sql_and_where_filter->form_column;
+        $action_column = $get_sql_and_where_filter->disable_action;
+        $edit_icon = $get_sql_and_where_filter->disable_edit_icon;
+        $delete_icon = $get_sql_and_where_filter->disable_delete_icon;
         //$get_sql = str_replace ('WHERE 1', "", $get_sql);
         $full_sql = explode("GROUP BY", $get_sql);
         $get_sql = $full_sql[0];
@@ -294,10 +353,12 @@ class Master extends Custom_Controller {
                 $get_sql .= " AND $val[0]='". $this->session->userdata($val[1]) ."'";
             }
         }
+        if($builder != NULL)$get_sql = $get_sql.$builder;
         $remain_part = $remain_part == ''?$remain_part:" GROUP BY ".$remain_part;
         $get_sql = $get_sql.$remain_part;
         $table_data = $this->master_model->array_result($get_sql);
-
+        
+        //$data_to_pass['post_value'] = $post_value;
         $data_to_pass['hdn_array'] = $hdn_arr;
         $data_to_pass['input_html'] = $form;
         $data_to_pass['table_data'] = $table_data;
@@ -322,6 +383,11 @@ class Master extends Custom_Controller {
         //echo '<pre>';
         //print_r($data_to_pass);
         //exit;
+        $data_to_pass['disable_action_column'] = $action_column;
+        $data_to_pass['disable_edit_icon'] = $edit_icon;
+        $data_to_pass['disable_delete_icon'] = $delete_icon;
+        $data_to_pass['form_column'] = $form_column;
+        $data_to_pass['search_panel'] = $search_html;
         $data_to_pass['export_pdf'] = $export_pdf;
         $data_to_pass['export_excel'] = $export_excel;
         $data_to_pass['export_csv'] = $export_csv;
@@ -375,11 +441,12 @@ class Master extends Custom_Controller {
             // Unset submitted value of join table from post array
             unset($get_entry[$value]);
         }
-        
+        //debug($get_entry,1);
         // If no id submit then insert otherwise update
         if($id==NULL){
             $get_entry['created_by'] = $this->user_id;
             $get_entry['created'] = date('Y-m-d H:i:s');
+            
             $this->db->insert($table_name, $get_entry);
             
             $id = $this->db->insert_id();
@@ -392,6 +459,7 @@ class Master extends Custom_Controller {
             $this->db->where($id_field, $id);
             $p = $this->db->update($table_name, $get_entry);
         }
+        
         // Now fetch the value from the array which contain table name as $key
         foreach ($insrt_val as $key => $value) {
             $tbl_name = $key;
@@ -412,6 +480,7 @@ class Master extends Custom_Controller {
             foreach ($post_value as $item) {
                 $data[] = array($relationa_field_name=>$id,$field_name=>$item);
             }
+            
             //print_r($data);
             $this->db->insert_batch($tbl_name, $data);
         }
@@ -570,6 +639,7 @@ class Master extends Custom_Controller {
                 $data['post_val'] = $get_value[0];
                 $data['open_edit'] = 1;
                 $data['level_array'] = $this->master_model->level_for_menu($menu_insert_id);
+                //debug($data['level_array'],1);
                 $data['user_array'] = $this->master_model->user_for_menu($menu_insert_id);
                 $data['sort_menu_list'] = $this->master_model->get_menu_list($parent_menu_id);
             }else{
@@ -830,10 +900,15 @@ class Master extends Custom_Controller {
     function edit_profile(){
      
         $post = $this->input->post();
+        //debug($post,1);
         if(empty($post)){
             $data['user_record'] = $this->master_model->user_information();
+            $current_user_id=  $this->session->userdata("USER_ID");
+        $data['user_history'] = $this->master_model->get_user_history($current_user_id);
 //            echo $this->db->last_query();
 //            exit();
+            //debug($this->get_menu(),1);
+            //$this->get_menu();
             $this->render_page('master/edit_user', $data);
         }
         else{
@@ -905,7 +980,43 @@ class Master extends Custom_Controller {
                 $data['user_record'] = $this->master_model->user_information();
                 $this->render_page('master/edit_user', $data);
             }
-        } 
+        }
+        
+        
+    }
+    function change_user_status(){
+        $data = $this->input->post();
+        $current_user_id=  $this->session->userdata("USER_ID");
+        $data['user_history'] = $this->master_model->get_user_history($current_user_id);
+        if($data != ""){
+            $info = array(
+                    'status' => "Cancelled"
+                );
+        }
+        
+        $this->db->WHERE('user_id', $current_user_id);
+        $this->db->UPDATE('reliever_history',$info);
+        $this->load->view('master/reliever_user_ajax_view',$data);
+    }
+    
+    function reliever_information(){
+        $data = $this->input->post();
+//        echo '<pre>';
+//        print_r($data);
+//        exit();
+        $current_user_id=  $this->session->userdata("USER_ID");
+        if(!empty($data)){
+            $info = array(
+                    'is_reliever' => "1",
+                    'reliever_to' => $data['user_id'],
+                    'reliever_start_datetime' => $data['start_date'],
+                    'reliever_end_datetime' => $data['end_date']  
+                );
+            $this->db->WHERE('user_id', $current_user_id);
+            $this->db->UPDATE('user',$info);
+        }
+        $data['user_history'] = $this->master_model->get_user_history($current_user_id);
+        $this->load->view('master/reliever_user_ajax_view',$data);
     }
     
     function submit_support(){
